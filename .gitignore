@@ -7,8 +7,15 @@
 # Python egg metadata, regenerated from source files by setuptools.
 /*.egg-info
 /*.egg
+/*.eggs
 
 # PyCharm
 /.idea/
+/.cache
 
-/.cache/
+# pytest
+/.pytest_cache
+/test_out/
+
+# Personal readme
+readme.txt
