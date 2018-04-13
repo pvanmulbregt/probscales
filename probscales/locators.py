@@ -4,8 +4,9 @@ from __future__ import (absolute_import, division, print_function,
 import numpy as np
 from matplotlib.ticker import (Locator)
 
-MIN_PROB = 1e-10
-MAX_PROB = 1 - 1e-10
+# MIN_PROB was 1e-10, but norminvgauss(1, 0) doesn't converge for approx p<1e-6
+MIN_PROB = 1e-5
+MAX_PROB = 1 - 1e-5
 
 
 class ProbabilityLocator(Locator):

@@ -4,7 +4,6 @@ from __future__ import (absolute_import, division, print_function, unicode_liter
 import scipy.stats
 from matplotlib.scale import register_scale
 
-from .transforms import ProbabilityTransform
 from .scales import ProbabilityScale
 
 _PREFIX = ''
@@ -13,7 +12,6 @@ _PREFIX = ''
 def get_scale_prefix():
     """return the prefix applied to the scipy.prob distribution names when generating the scale names"""
     return _PREFIX
-
 
 # Holds all the names of generated Scales
 _prob_scales = []
@@ -67,7 +65,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.alpha(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(AlphaScale)
 
@@ -108,7 +105,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.anglit(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(AnglitScale)
 
@@ -149,7 +145,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.arcsine(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(ArcsineScale)
 
@@ -190,7 +185,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.argus(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(ArgusScale)
 
@@ -231,7 +225,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.beta(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(BetaScale)
 
@@ -272,7 +265,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.betaprime(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(BetaprimeScale)
 
@@ -313,7 +305,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.bradford(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(BradfordScale)
 
@@ -354,7 +345,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.burr(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(BurrScale)
 
@@ -395,7 +385,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.burr12(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(Burr12Scale)
 
@@ -436,7 +425,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.cauchy(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(CauchyScale)
 
@@ -477,7 +465,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.chi(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(ChiScale)
 
@@ -518,7 +505,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.chi2(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(Chi2Scale)
 
@@ -559,9 +545,48 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.cosine(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(CosineScale)
+
+
+#################################################
+try:
+    scipy.stats.crystalball
+except AttributeError:
+    pass
+else:
+    # Some distributions have '_' in their names, breaking CamelCase convention
+    # noinspection PyPep8Naming
+    class CrystalballScale(ProbabilityScale):
+        """
+        Probability scale for data between zero and one using scipy.stats.crystalball distribution.
+
+        Send p -> CDF^-1(p) = scipy.stats.crystalball.ppf(p)
+        I.e. f(p) == x  <==>  p ==  Integral scipy.stats.crystalball.pdf(t)dt over ]-infty, x]
+        """
+        name = 'crystalball'
+        ctor_args = ['beta', 'm']
+
+        def __init__(self, axis, dist_args=None, dist_kwargs=None, nonpos='mask', percentage=False):
+            """
+            *axis*:
+              unused, compatibility with ProbabilityScale
+            *dist_args*:
+              passed to constructor of scipy.stats.crystalball(*dist_args, **dist_kwargs)
+            *dist_kwargs*:
+              passed to constructor of scipy.stats.crystalball(*dist_args, **dist_kwargs)
+            *nonpos*: ['mask' | 'clip' ]
+              values beyond ]0, 1[ can be masked as invalid, or clipped to a number
+              very close to 0 or 1
+            *percentage*: [True | False]
+              Display probability values as percentages
+            """
+            args = dist_args or []
+            kwargs = dist_kwargs or {}
+            dist = scipy.stats.crystalball(*args, **kwargs)
+            ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
+
+    _record_scale(CrystalballScale)
 
 
 #################################################
@@ -600,7 +625,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.dgamma(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(DgammaScale)
 
@@ -641,7 +665,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.dweibull(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(DweibullScale)
 
@@ -682,7 +705,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.erlang(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(ErlangScale)
 
@@ -723,7 +745,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.expon(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(ExponScale)
 
@@ -764,7 +785,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.exponnorm(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(ExponnormScale)
 
@@ -805,7 +825,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.exponpow(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(ExponpowScale)
 
@@ -846,7 +865,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.exponweib(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(ExponweibScale)
 
@@ -887,7 +905,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.f(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(FScale)
 
@@ -928,7 +945,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.fatiguelife(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(FatiguelifeScale)
 
@@ -969,7 +985,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.fisk(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(FiskScale)
 
@@ -1010,7 +1025,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.foldcauchy(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(FoldcauchyScale)
 
@@ -1051,7 +1065,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.foldnorm(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(FoldnormScale)
 
@@ -1092,7 +1105,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.frechet_l(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(Frechet_lScale)
 
@@ -1133,7 +1145,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.frechet_r(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(Frechet_rScale)
 
@@ -1174,7 +1185,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.gamma(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(GammaScale)
 
@@ -1215,7 +1225,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.gausshyper(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(GausshyperScale)
 
@@ -1256,7 +1265,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.genexpon(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(GenexponScale)
 
@@ -1297,7 +1305,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.genextreme(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(GenextremeScale)
 
@@ -1338,7 +1345,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.gengamma(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(GengammaScale)
 
@@ -1379,7 +1385,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.genhalflogistic(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(GenhalflogisticScale)
 
@@ -1420,7 +1425,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.genlogistic(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(GenlogisticScale)
 
@@ -1461,7 +1465,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.gennorm(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(GennormScale)
 
@@ -1502,7 +1505,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.genpareto(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(GenparetoScale)
 
@@ -1543,7 +1545,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.gilbrat(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(GilbratScale)
 
@@ -1584,7 +1585,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.gompertz(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(GompertzScale)
 
@@ -1625,7 +1625,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.gumbel_l(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(Gumbel_lScale)
 
@@ -1666,7 +1665,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.gumbel_r(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(Gumbel_rScale)
 
@@ -1707,7 +1705,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.halfcauchy(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(HalfcauchyScale)
 
@@ -1748,7 +1745,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.halfgennorm(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(HalfgennormScale)
 
@@ -1789,7 +1785,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.halflogistic(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(HalflogisticScale)
 
@@ -1830,7 +1825,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.halfnorm(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(HalfnormScale)
 
@@ -1871,7 +1865,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.hypsecant(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(HypsecantScale)
 
@@ -1912,7 +1905,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.invgamma(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(InvgammaScale)
 
@@ -1953,7 +1945,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.invgauss(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(InvgaussScale)
 
@@ -1994,7 +1985,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.invweibull(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(InvweibullScale)
 
@@ -2035,7 +2025,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.johnsonsb(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(JohnsonsbScale)
 
@@ -2076,7 +2065,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.johnsonsu(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(JohnsonsuScale)
 
@@ -2117,7 +2105,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.kappa3(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(Kappa3Scale)
 
@@ -2158,7 +2145,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.kappa4(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(Kappa4Scale)
 
@@ -2199,7 +2185,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.ksone(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(KsoneScale)
 
@@ -2240,7 +2225,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.kstwobign(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(KstwobignScale)
 
@@ -2281,7 +2265,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.laplace(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(LaplaceScale)
 
@@ -2322,7 +2305,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.levy(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(LevyScale)
 
@@ -2363,7 +2345,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.levy_l(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(Levy_lScale)
 
@@ -2404,7 +2385,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.loggamma(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(LoggammaScale)
 
@@ -2445,7 +2425,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.logistic(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(LogisticScale)
 
@@ -2486,7 +2465,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.loglaplace(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(LoglaplaceScale)
 
@@ -2527,7 +2505,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.lognorm(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(LognormScale)
 
@@ -2568,7 +2545,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.lomax(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(LomaxScale)
 
@@ -2609,7 +2585,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.maxwell(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(MaxwellScale)
 
@@ -2650,9 +2625,48 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.mielke(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(MielkeScale)
+
+
+#################################################
+try:
+    scipy.stats.moyal
+except AttributeError:
+    pass
+else:
+    # Some distributions have '_' in their names, breaking CamelCase convention
+    # noinspection PyPep8Naming
+    class MoyalScale(ProbabilityScale):
+        """
+        Probability scale for data between zero and one using scipy.stats.moyal distribution.
+
+        Send p -> CDF^-1(p) = scipy.stats.moyal.ppf(p)
+        I.e. f(p) == x  <==>  p ==  Integral scipy.stats.moyal.pdf(t)dt over ]-infty, x]
+        """
+        name = 'moyal'
+        ctor_args = []
+
+        def __init__(self, axis, dist_args=None, dist_kwargs=None, nonpos='mask', percentage=False):
+            """
+            *axis*:
+              unused, compatibility with ProbabilityScale
+            *dist_args*:
+              passed to constructor of scipy.stats.moyal(*dist_args, **dist_kwargs)
+            *dist_kwargs*:
+              passed to constructor of scipy.stats.moyal(*dist_args, **dist_kwargs)
+            *nonpos*: ['mask' | 'clip' ]
+              values beyond ]0, 1[ can be masked as invalid, or clipped to a number
+              very close to 0 or 1
+            *percentage*: [True | False]
+              Display probability values as percentages
+            """
+            args = dist_args or []
+            kwargs = dist_kwargs or {}
+            dist = scipy.stats.moyal(*args, **kwargs)
+            ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
+
+    _record_scale(MoyalScale)
 
 
 #################################################
@@ -2691,7 +2705,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.nakagami(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(NakagamiScale)
 
@@ -2732,7 +2745,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.ncf(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(NcfScale)
 
@@ -2773,7 +2785,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.nct(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(NctScale)
 
@@ -2814,7 +2825,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.ncx2(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(Ncx2Scale)
 
@@ -2855,9 +2865,48 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.norm(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(NormScale)
+
+
+#################################################
+try:
+    scipy.stats.norminvgauss
+except AttributeError:
+    pass
+else:
+    # Some distributions have '_' in their names, breaking CamelCase convention
+    # noinspection PyPep8Naming
+    class NorminvgaussScale(ProbabilityScale):
+        """
+        Probability scale for data between zero and one using scipy.stats.norminvgauss distribution.
+
+        Send p -> CDF^-1(p) = scipy.stats.norminvgauss.ppf(p)
+        I.e. f(p) == x  <==>  p ==  Integral scipy.stats.norminvgauss.pdf(t)dt over ]-infty, x]
+        """
+        name = 'norminvgauss'
+        ctor_args = ['a', 'b']
+
+        def __init__(self, axis, dist_args=None, dist_kwargs=None, nonpos='mask', percentage=False):
+            """
+            *axis*:
+              unused, compatibility with ProbabilityScale
+            *dist_args*:
+              passed to constructor of scipy.stats.norminvgauss(*dist_args, **dist_kwargs)
+            *dist_kwargs*:
+              passed to constructor of scipy.stats.norminvgauss(*dist_args, **dist_kwargs)
+            *nonpos*: ['mask' | 'clip' ]
+              values beyond ]0, 1[ can be masked as invalid, or clipped to a number
+              very close to 0 or 1
+            *percentage*: [True | False]
+              Display probability values as percentages
+            """
+            args = dist_args or []
+            kwargs = dist_kwargs or {}
+            dist = scipy.stats.norminvgauss(*args, **kwargs)
+            ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
+
+    _record_scale(NorminvgaussScale)
 
 
 #################################################
@@ -2896,7 +2945,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.pareto(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(ParetoScale)
 
@@ -2937,7 +2985,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.pearson3(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(Pearson3Scale)
 
@@ -2978,7 +3025,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.powerlaw(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(PowerlawScale)
 
@@ -3019,7 +3065,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.powerlognorm(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(PowerlognormScale)
 
@@ -3060,7 +3105,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.powernorm(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(PowernormScale)
 
@@ -3101,7 +3145,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.rayleigh(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(RayleighScale)
 
@@ -3142,7 +3185,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.rdist(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(RdistScale)
 
@@ -3183,7 +3225,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.recipinvgauss(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(RecipinvgaussScale)
 
@@ -3224,7 +3265,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.reciprocal(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(ReciprocalScale)
 
@@ -3265,7 +3305,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.rice(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(RiceScale)
 
@@ -3306,7 +3345,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.semicircular(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(SemicircularScale)
 
@@ -3347,7 +3385,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.skewnorm(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(SkewnormScale)
 
@@ -3388,7 +3425,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.t(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(TScale)
 
@@ -3429,7 +3465,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.trapz(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(TrapzScale)
 
@@ -3470,7 +3505,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.triang(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(TriangScale)
 
@@ -3511,7 +3545,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.truncexpon(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(TruncexponScale)
 
@@ -3552,7 +3585,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.truncnorm(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(TruncnormScale)
 
@@ -3593,7 +3625,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.tukeylambda(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(TukeylambdaScale)
 
@@ -3634,7 +3665,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.uniform(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(UniformScale)
 
@@ -3675,7 +3705,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.vonmises(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(VonmisesScale)
 
@@ -3716,7 +3745,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.vonmises_line(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(Vonmises_lineScale)
 
@@ -3757,7 +3785,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.wald(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(WaldScale)
 
@@ -3798,7 +3825,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.weibull_max(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(Weibull_maxScale)
 
@@ -3839,7 +3865,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.weibull_min(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(Weibull_minScale)
 
@@ -3880,7 +3905,6 @@ else:
             kwargs = dist_kwargs or {}
             dist = scipy.stats.wrapcauchy(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale(WrapcauchyScale)
 

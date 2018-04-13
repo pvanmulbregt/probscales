@@ -32,7 +32,7 @@ def _getargspec(meth):
 _dists = list(filter(None, '''
 alpha anglit arcsine argus
 beta betaprime bradford burr burr12
-cauchy chi chi2 cosine
+cauchy chi chi2 cosine crystalball
 dgamma dweibull
 erlang expon exponnorm exponpow exponweib
 f fatiguelife fisk foldcauchy foldnorm frechet_l frechet_r
@@ -43,8 +43,8 @@ invgamma invgauss invweibull
 johnsonsb johnsonsu
 kappa3 kappa4 ksone kstwobign
 laplace levy levy_l loggamma logistic loglaplace lognorm lomax
-maxwell mielke
-nakagami ncf nct ncx2 norm
+maxwell mielke moyal
+nakagami ncf nct ncx2 norm norminvgauss
 pareto pearson3 powerlaw powerlognorm powernorm
 rayleigh rdist recipinvgauss reciprocal rice
 semicircular skewnorm
@@ -66,7 +66,6 @@ from __future__ import (absolute_import, division, print_function, unicode_liter
 import scipy.stats
 from matplotlib.scale import register_scale
 
-from .transforms import ProbabilityTransform
 from .scales import ProbabilityScale
 
 _PREFIX = {prefix!r}
@@ -130,7 +129,6 @@ else:
             kwargs = dist_kwargs or {{}}
             dist = scipy.stats.{dist}(*args, **kwargs)
             ProbabilityScale.__init__(self, axis, dist, nonpos=nonpos, percentage=percentage)
-            # self._transform = ProbabilityTransform(dist, nonpos)
 
     _record_scale({dist_class_name}Scale)
 
@@ -180,7 +178,7 @@ def _get_shapes(dst):
     return shapes
 
 
-def generate_source(prefix=None):
+def generate_source(prefix=None, verbose=True):
     if prefix is None:
         prefix = ''
     s = _TOP_TEMPLATE.format(prefix=prefix)
@@ -191,7 +189,7 @@ def generate_source(prefix=None):
         print()
     # http://scipy.github.io/devdocs/tutorial/stats/continuous.html#continuous-random-variables
     # undoc = sorted(set(_dists_from_scipystats) - set(_dists_dev))
-
+    nDists = 0
     for dist in _dists_from_scipystats:  # was _dists
         dist_cap = dist[0].upper() + dist[1:]
         dst = getattr(scipy.stats, dist)
@@ -211,17 +209,21 @@ def generate_source(prefix=None):
             # print(dst.numargs, ctorArgs)
         else:
             # print(dist, dst.numargs, "shapes=", ctr_dct.get('shapes'), shapes)
-            print('{} numargs={} shapes={}'.format(dist, dst.numargs, shapes))
+            if verbose:
+                print('{} numargs={} shapes={}'.format(dist, dst.numargs, shapes))
             # ctorArgs = ', '.join(shapes) if shapes else ''  # NB: not None
             ctor_args = shapes
         s += _SCALE_TEMPLATE.format(dist=dist, dist_class_name=dist_cap, prefix=prefix, ctor_args=ctor_args)
-    return s
+        nDists += 1
+    return s, nDists
 
 
-def create_probscales(fn, prefix=None):
-    s = generate_source(prefix=prefix)
+def create_probscales(fn, prefix=None, verbose=True):
+    s, nDists = generate_source(prefix=prefix, verbose=verbose)
     with open(fn, 'wt') as f:
         f.write(s)
+    print('Generated ProbabilityScales for %d distributions' % nDists)
+    return nDists
 
 
 def parse_args():

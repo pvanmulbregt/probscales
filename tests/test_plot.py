@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 
-import sys
 import os.path
 import unittest
 import inspect
@@ -14,6 +15,14 @@ try:
     from .context import probscales
 except Exception as e:
     import probscales
+
+# FUTURE
+# Look at pytest mpl extensions.
+# Is there a way to use the @pytest.mark.mpl_image_compare decorator
+# on plot_one_scale() and have it use a different filename for each
+# invocation?
+#
+
 
 TEST_OUTPUT_DIR = 'test_out'
 _probscalesfile = probscales.__file__
@@ -80,8 +89,9 @@ def _get_shapes(dst):
 
     return shapes
 
-
-_defaultCtrArgs = {
+# A dict of some default shape arguments that can be used when testing
+# to construct a distribution
+_defaultShapeArgs = {
     'alpha': [1],
     'beta': [0.2, 0.8],
     'betaprime': [0.2, 0.8],
@@ -93,6 +103,7 @@ _defaultCtrArgs = {
     'f': [12, 8],
     # 'fisk': [1],
     'ksone': [1e3],
+    'norminvgauss' : [1.0, 0.0],
     'trapz': [0.2, 0.8],
     'triang': [0.2],
     'wrapcauchy': [0.2],
@@ -101,7 +112,7 @@ _defaultCtrArgs = {
 
 def _get_dist_args(dst, scalename):
     shapes = _get_shapes(dst)
-    dist_args = _defaultCtrArgs.get(scalename, None)
+    dist_args = _defaultShapeArgs.get(scalename, None)
     if dist_args is None:
         if shapes == ['df']:
             dist_args = [4]  # degrees of freedom for chi, chi2, ...
@@ -109,7 +120,6 @@ def _get_dist_args(dst, scalename):
             dist_args = [12, 8]  # f distribution
         elif shapes == ['h', 'k']:
             dist_args = [1.0, 2.0]  # kappa4 needs float, not integers
-            pass
 
     if dist_args is None:
         dist_args = list(range(1, len(shapes) + 1, 1))
@@ -117,14 +127,14 @@ def _get_dist_args(dst, scalename):
     return dist_args
 
 
-def plot_one_scale(scalename, scale_prefix='', outfn=None, separate_pdf_axis=True):
+def plot_one_scale(scalename, scale_prefix='', separate_pdf_axis=True):
     logger = logging.getLogger(__name__)
     if scalename == 'runTest':
         # May happen if yielding classes for testing
         return
 
     u0, u1 = 0, 1
-    threshvals = np.arange(-80, 81, 1) / 20.0  # +/- 4 std deviations
+    # threshvals = np.arange(-80, 81, 1) / 20.0  # +/- 4 std deviations
     threshvals = np.arange(-60, 61, 1) / 20.0  # +/- 3 std deviations
     xvals = scipy.stats.norm.sf(threshvals)
     yvals = scipy.stats.norm.cdf(threshvals - u1)
@@ -158,6 +168,7 @@ def plot_one_scale(scalename, scale_prefix='', outfn=None, separate_pdf_axis=Tru
                     import traceback
                     traceback.print_exc()
                 raise
+
     minp = (0 if np.isfinite(dst.a) else 0.001)
     maxp = (1 if np.isfinite(dst.b) else 1-0.001)
 
@@ -166,6 +177,7 @@ def plot_one_scale(scalename, scale_prefix='', outfn=None, separate_pdf_axis=Tru
 
     # Use linearly spacing on the x-axis for plotting? Or linear spacing on the CDF prob?
     # Linear spacing on the x-axis makes for better plots...
+    bXLinearSpacing = True
     linspaced_probs = np.linspace(minp, maxp, num=101, endpoint=True)
     xx_plinspaced = dst.ppf(linspaced_probs)
     minx, maxx = xx_plinspaced[0], xx_plinspaced[-1]
@@ -173,13 +185,13 @@ def plot_one_scale(scalename, scale_prefix='', outfn=None, separate_pdf_axis=Tru
 
     fig, axs = plt.subplots(nrows=1, ncols=2, figsize=[16, 8], squeeze=True)
     ax0 = axs[0]
-    plt.sca(ax0)
-    if 0:
-        xxs = xx_plinspaced
-        yys = linspaced_probs
-    else:
+    # plt.sca(ax0)
+    if bXLinearSpacing:
         xxs = xx_linspaced
         yys = dst.cdf(xx_linspaced)
+    else:
+        xxs = xx_plinspaced
+        yys = linspaced_probs
     ax0.plot(xxs, yys, '-', lw=1, label='CDF')
     ax0.set_ylabel('CDF', color='C0')
     ax0.set_xlabel('x')
@@ -187,8 +199,13 @@ def plot_one_scale(scalename, scale_prefix='', outfn=None, separate_pdf_axis=Tru
     ax0.tick_params('y', colors='C0')
 
     xlim = [xxs[0], xxs[-1]]
+    for idx, v in enumerate(xlim):
+        if np.isnan(v) or np.isinf(v):
+            xlim[idx] = None
     ax0.set_xlim(xlim)
     ax0.grid(which='major', axis='both')
+
+    bProhibitLargeEndJumps = False
 
     if separate_pdf_axis:
         ax2 = ax0.twinx()
@@ -203,11 +220,11 @@ def plot_one_scale(scalename, scale_prefix='', outfn=None, separate_pdf_axis=Tru
             logger.warning('Dropping infinite right {} for scale {}'.format(xxs[-1], scalename))
             xxs = xxs[:-1]
             pdfs = pdfs[:-1]
-        if 0 and pdfs[-1] > 10 * pdfs[-2]:
+        if bProhibitLargeEndJumps and pdfs[-1] > 10 * pdfs[-2]:
             logger.warning('Dropping large right {}>{} for scale {}'.format(pdfs[-1], pdfs[-2], scalename))
             xxs = xxs[:-1]
             pdfs = pdfs[:-1]
-        if 0 and pdfs[0] > 10 * pdfs[1]:
+        if bProhibitLargeEndJumps and pdfs[0] > 10 * pdfs[1]:
             logger.warning('Dropping large left {}>{} for scale {}'.format(pdfs[0], pdfs[1], scalename))
             xxs = xxs[1:]
             pdfs = pdfs[1:]
@@ -223,10 +240,10 @@ def plot_one_scale(scalename, scale_prefix='', outfn=None, separate_pdf_axis=Tru
         ax0.plot(xxs, dst.pdf(xxs), '-', markersize=1, label='PDF', lw=1)
     ax0.legend()
 
-    plt.title('Scale={}'.format(scalename))
+    ax0.set_title('Scale={}'.format(scalename))
 
     ax1 = axs[1]
-    plt.sca(ax1)
+    # plt.sca(ax1)
     ax1.plot(xvals, yvals, 'bo', linestyle='-', markersize=2, lw=1, label='u1-u0=1')
     yys = 1 - linspaced_probs
     ax1.plot(linspaced_probs, yys, 'r+', linestyle='-', lw=1, markersize=2, label='random')
@@ -244,7 +261,7 @@ def plot_one_scale(scalename, scale_prefix='', outfn=None, separate_pdf_axis=Tru
     # Check that the transform is doing what is expected
     if scalename not in ['linear']:
         # 'linear' scale has no transform
-        ax = plt.gca()
+        # ax = plt.gca()
         ax = ax1
         # noinspection PyProtectedMember
         mplscale = ax.xaxis._scale
@@ -262,11 +279,14 @@ def plot_one_scale(scalename, scale_prefix='', outfn=None, separate_pdf_axis=Tru
         tyvals = np.array(mpltransform.transform(yvals))
         assert np.allclose(tyvals, yvals_ppf)
 
+    return fig
+
+
+def plot_one_scale_to_file(scalename, scale_prefix='', outfn=None, separate_pdf_axis=True):
+    fig = plot_one_scale(scalename, scale_prefix=scale_prefix, separate_pdf_axis=separate_pdf_axis)
     if outfn:
         plt.savefig(outfn)
     plt.close(fig)
-    # if scalename == 'beta':
-    #     raise Exception('Bail early')
 
 
 class PlotTestSuite(unittest.TestCase):
@@ -283,15 +303,26 @@ class PlotTestSuite(unittest.TestCase):
         nTested = 0
         for sc in ['linear', 'probit']:
             fn = os.path.join(outdir, sc + '.png')
-            plot_one_scale(sc, outfn=fn)
+            plot_one_scale_to_file(sc, outfn=fn)
+            # fig = plot_one_scale(sc, filename=fn)
+            # plt.close(fig)
             nTested += 1
         for name in scale_names:
+            # if name != 'norminvgauss':
+            #     continue
             fn = os.path.join(outdir, name + '.png')
             print('Scale: %s' % name)
-            plot_one_scale(name, scale_prefix=scale_prefix, outfn=fn)
+            plot_one_scale_to_file(name, scale_prefix=scale_prefix, outfn=fn)
+            # fig = plot_one_scale(name, scale_prefix=scale_prefix, filename=fn)
+            # plt.close(fig)
             nTested += 1
         print('nTested={}'.format(nTested))
 
 
 if __name__ == '__main__':
     unittest.main()
+
+# Run once to generate reference files
+# py.test --mpl-generate-path=baseline
+# Then run to do the comparisons
+# py.test --mpl
